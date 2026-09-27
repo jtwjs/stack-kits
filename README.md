@@ -26,7 +26,7 @@ cd my-api && git init
 | kit | format | lint | typecheck | test | build |
 |---|---|---|---|---|---|
 | kotlin-spring | `./gradlew ktlintCheck` | — (detekt는 Kotlin 2.3 안정판 미지원) | `./gradlew compileKotlin compileTestKotlin` | `./gradlew test` (Docker 필요) | `./gradlew build -x test` |
-| nextjs | `pnpm format:check` | `pnpm lint` | `pnpm typecheck` | `pnpm test` | `pnpm build` |
+| nextjs | `pnpm format:check` | `pnpm lint` | `pnpm typecheck` (`next typegen` 먼저) | `pnpm test` | `pnpm build` |
 
 - `./gradlew build -x test`를 `test`와 한 명령에 섞지 않는다. `-x`는 그래프 전체에서 test를 뺀다.
 - API를 바꿨으면 `UPDATE_CONTRACTS=1 ./gradlew test --tests '*OpenApiContractTest'`로 `contracts/openapi.json`을 다시 쓰고 같이 커밋한다.
