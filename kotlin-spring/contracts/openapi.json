@@ -1,0 +1,144 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "OpenAPI definition",
+    "version" : "v0"
+  },
+  "servers" : [ {
+    "url" : "http://localhost",
+    "description" : "Generated server url"
+  } ],
+  "paths" : {
+    "/api/articles" : {
+      "post" : {
+        "tags" : [ "기사" ],
+        "summary" : "기사 작성 (초안)",
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateArticleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ArticleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/articles/{id}/publish" : {
+      "post" : {
+        "tags" : [ "기사" ],
+        "summary" : "기사 발행 — 초안만 가능, 아니면 409",
+        "operationId" : "publish",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ArticleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/articles/{id}" : {
+      "get" : {
+        "tags" : [ "기사" ],
+        "summary" : "기사 조회",
+        "operationId" : "get",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ArticleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "CreateArticleRequest" : {
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : [ "string", "null" ],
+            "description" : "제목",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "body" : {
+            "type" : [ "string", "null" ],
+            "description" : "본문",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "body", "title" ]
+      },
+      "ArticleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "기사 ID"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "제목"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "상태",
+            "enum" : [ "DRAFT", "PUBLISHED" ]
+          },
+          "publishedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time",
+            "description" : "발행 시각. 미발행이면 null"
+          }
+        },
+        "required" : [ "id", "status", "title" ]
+      }
+    }
+  }
+}

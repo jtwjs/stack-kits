@@ -1,0 +1,9 @@
+# 운영. 접속 정보는 환경변수로만: SPRING_DATASOURCE_URL · SPRING_DATASOURCE_USERNAME · SPRING_DATASOURCE_PASSWORD
+spring:
+  docker:
+    compose:
+      enabled: false
+logging:
+  structured:
+    format:
+      console: logstash # JSON 한 줄. requestId(MDC)가 같이 찍힌다
