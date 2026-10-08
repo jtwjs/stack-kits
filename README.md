@@ -7,7 +7,7 @@ AI 작업 환경(`CLAUDE.md`·`.claude/rules`·훅·CI 게이트)은 여기 없�
 ## 쓰는 법
 
 ```bash
-npx degit jtwjs/stack-kits/kotlin-spring my-api   # 또는 nextjs
+npx degit jtwjs/stack-kits/kotlin-spring my-api   # 또는 nextjs · fullstack
 cd my-api && git init
 # Claude Code 에서: /claude-harness:harness-new 를 쓰면 위 두 줄 + harness-init 을 한 번에
 ```
@@ -18,18 +18,17 @@ cd my-api && git init
 |---|---|---|
 | `kotlin-spring/` | Spring Boot 4.1 · Kotlin 2.3 · JDK 21 · MySQL 8.4 | Flyway `V1` + `ddl-auto: validate` · `compose.yaml`(bootRun 때 자동 기동) · 로컬 SQL·바인딩 로그 · 운영 JSON 로그 + `X-Request-Id` · springdoc → `contracts/openapi.json` 스냅샷 테스트 · Kotlin non-null → `required` 변환기 · Testcontainers 통합 테스트 · MockK 단위 테스트 · ArchUnit 레이어 규칙 · ktlint · `http/*.http` |
 | `nextjs/` | Next.js 16 (App Router) · React 19 · Node 24 · pnpm | Tailwind 4 · Vitest + Testing Library · Playwright E2E · ESLint · Prettier · `typecheck` 스크립트 |
+| `fullstack/` | `apps/api`(kotlin-spring과 같은 스택) + `apps/web`(React 19 · Vite · TypeScript · Node 24 · pnpm) | 계약 파이프라인 `openapi.json` → `openapi-typescript` → `openapi-fetch` + `unwrap()`(ProblemDetail → `ApiError`) · FSD 레이아웃과 ESLint 레이어 규칙 · vite proxy 같은 출처 · 시간대 명시 포맷 · 모노레포 CI(api · web · contract · ci-gate) |
 
-예시 도메인은 둘 다 **기사(article)** 하나다: 초안 작성 → 조회 → 발행, 이미 발행이면 409. 레이어·마이그레이션·상태 전이·계약이 한 흐름에 다 나온다. 새 프로젝트에서는 지우고 시작한다.
+예시 도메인은 모두 **기사(article)** 하나다: 초안 작성 → 조회 → 발행, 이미 발행이면 409. 레이어·마이그레이션·상태 전이·계약이 한 흐름에 다 나온다. 새 프로젝트에서는 지우고 시작한다. 지울 파일 목록은 kit README의 체크리스트에 있다.
 
 ## 검증 명령
 
-| kit | format | lint | typecheck | test | build |
-|---|---|---|---|---|---|
-| kotlin-spring | `./gradlew ktlintCheck` | — (detekt는 Kotlin 2.3 안정판 미지원) | `./gradlew compileKotlin compileTestKotlin` | `./gradlew test` (Docker 필요) | `./gradlew build -x test` |
-| nextjs | `pnpm format:check` | `pnpm lint` | `pnpm typecheck` (`next typegen` 먼저) | `pnpm test` | `pnpm build` |
+kit마다 README에 표가 있다. degit으로 kit 폴더만 받아도 그대로 쓴다.
 
-- `./gradlew build -x test`를 `test`와 한 명령에 섞지 않는다. `-x`는 그래프 전체에서 test를 뺀다.
-- API를 바꿨으면 `UPDATE_CONTRACTS=1 ./gradlew test --tests '*OpenApiContractTest'`로 `contracts/openapi.json`을 다시 쓰고 같이 커밋한다.
+- [kotlin-spring](kotlin-spring/README.md#검증-명령)
+- [nextjs](nextjs/README.md#검증-명령)
+- [fullstack](fullstack/README.md#검증-명령)
 
 ## 원칙
 

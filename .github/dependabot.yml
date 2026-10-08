@@ -1,4 +1,5 @@
 version: 2
+# develop 브랜치 전략이면 각 항목에 target-branch: develop 을 넣는다 (기본은 레포 기본 브랜치)
 updates:
   - package-ecosystem: gradle
     directory: /kotlin-spring
@@ -7,6 +8,16 @@ updates:
       minor-and-patch: { update-types: [minor, patch] }
   - package-ecosystem: npm
     directory: /nextjs
+    schedule: { interval: weekly }
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
+  - package-ecosystem: gradle
+    directory: /fullstack/apps/api
+    schedule: { interval: weekly }
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
+  - package-ecosystem: npm
+    directory: /fullstack/apps/web
     schedule: { interval: weekly }
     groups:
       minor-and-patch: { update-types: [minor, patch] }

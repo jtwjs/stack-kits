@@ -69,9 +69,46 @@ jobs:
       - name: e2e
         run: pnpm test:e2e
 
+  fullstack-api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fullstack/apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" } # fullstack/apps/api/build.gradle.kts toolchain 과 같게
+      - uses: gradle/actions/setup-gradle@v4
+      - name: format
+        run: ./gradlew ktlintCheck
+      - name: test # Testcontainers(MySQL) · 계약 스냅샷 포함
+        run: ./gradlew test
+      - name: build
+        run: ./gradlew build -x test
+
+  fullstack-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fullstack/apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: fullstack/apps/web/package.json }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: fullstack/apps/web/.nvmrc
+          cache: pnpm
+          cache-dependency-path: fullstack/apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: contract # 계약 스냅샷 → 생성 타입이 커밋본과 같다
+        run: pnpm gen:api && git diff --exit-code src/shared/api/generated.ts
+      - name: verify # format:check → lint → typecheck → test → build
+        run: pnpm verify
+
   ci-gate:
     if: always()
-    needs: [kotlin-spring, nextjs, nextjs-e2e]
+    needs: [kotlin-spring, nextjs, nextjs-e2e, fullstack-api, fullstack-web]
     runs-on: ubuntu-latest
     steps:
       - name: 모든 kit 잡이 성공해야 통과 (skipped·cancelled 도 실패로 친다)
