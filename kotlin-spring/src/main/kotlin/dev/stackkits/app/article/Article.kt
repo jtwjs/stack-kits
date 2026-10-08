@@ -1,5 +1,6 @@
 package dev.stackkits.app.article
 
+import dev.stackkits.app.common.DomainException
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -8,6 +9,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.springframework.http.HttpStatus
 import java.time.Instant
 
 @Entity
@@ -57,4 +59,4 @@ enum class ArticleStatus {
 class IllegalTransitionException(
     from: ArticleStatus,
     to: ArticleStatus,
-) : RuntimeException("article cannot move from $from to $to")
+) : DomainException(HttpStatus.CONFLICT, "article cannot move from $from to $to")

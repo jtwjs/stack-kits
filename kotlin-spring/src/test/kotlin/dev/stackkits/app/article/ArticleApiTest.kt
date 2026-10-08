@@ -42,16 +42,25 @@ class ArticleApiTest(
     }
 
     @Test
-    fun `필수 필드가 빠지면 400`() {
+    fun `필수 필드가 빠지면 400 — 바디는 ProblemDetail`() {
         mockMvc
             .post("/api/articles") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"title":""}"""
-            }.andExpect { status { isBadRequest() } }
+            }.andExpect {
+                status { isBadRequest() }
+                content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+                jsonPath("$.status") { value(400) }
+                jsonPath("$.title") { exists() }
+            }
     }
 
     @Test
     fun `없는 기사는 404`() {
-        mockMvc.get("/api/articles/999999").andExpect { status { isNotFound() } }
+        mockMvc.get("/api/articles/999999").andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+            jsonPath("$.detail") { value("article 999999 not found") }
+        }
     }
 }

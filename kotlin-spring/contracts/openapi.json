@@ -25,6 +25,16 @@
           "required" : true
         },
         "responses" : {
+          "400" : {
+            "description" : "검증 실패",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
           "201" : {
             "description" : "Created",
             "content" : {
@@ -53,6 +63,26 @@
           }
         } ],
         "responses" : {
+          "404" : {
+            "description" : "없는 기사",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "허용되지 않은 전이",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -81,6 +111,16 @@
           }
         } ],
         "responses" : {
+          "404" : {
+            "description" : "없는 기사",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -113,6 +153,33 @@
           }
         },
         "required" : [ "body", "title" ]
+      },
+      "ProblemDetail" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "format" : "uri"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "detail" : {
+            "type" : "string"
+          },
+          "instance" : {
+            "type" : "string",
+            "format" : "uri"
+          },
+          "properties" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          }
+        }
       },
       "ArticleResponse" : {
         "type" : "object",

@@ -1,4 +1,4 @@
-// 서버 계약의 ArticleStatus 와 같은 값. 풀스택 kit 에서는 생성된 타입(src/api/generated)으로 바뀐다.
+// 단일 kit — 서버가 없어 손으로 쓴 타입이다. 서버 계약이 생기면 생성 타입으로 바꾼다(fullstack kit 참고).
 export type ArticleStatus = "DRAFT" | "PUBLISHED";
 
 const LABELS: Record<ArticleStatus, string> = {

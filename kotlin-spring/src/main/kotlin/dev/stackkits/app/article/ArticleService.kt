@@ -1,6 +1,8 @@
 package dev.stackkits.app.article
 
+import dev.stackkits.app.common.DomainException
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -32,4 +34,4 @@ class ArticleService(
 
 class ArticleNotFoundException(
     id: Long,
-) : RuntimeException("article $id not found")
+) : DomainException(HttpStatus.NOT_FOUND, "article $id not found")

@@ -16,6 +16,7 @@ class ArchitectureTest {
             .should()
             .dependOnClassesThat()
             .haveSimpleNameEndingWith("Repository")
+            .allowEmptyShould(true) // 예시 도메인을 지워 대상 클래스가 0개여도 실패하지 않게
 
     @ArchTest
     val servicesDoNotDependOnWeb = // 서비스는 웹 계층에 의존하지 않는다
@@ -25,4 +26,5 @@ class ArchitectureTest {
             .should()
             .dependOnClassesThat()
             .resideInAPackage("org.springframework.web..")
+            .allowEmptyShould(true)
 }
