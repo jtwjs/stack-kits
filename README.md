@@ -17,8 +17,8 @@ cd my-api && git init
 | kit | 스택 | 들어 있는 것 |
 |---|---|---|
 | `kotlin-spring/` | Spring Boot 4.1 · Kotlin 2.3 · JDK 21 · MySQL 8.4 | Flyway `V1` + `ddl-auto: validate` · `compose.yaml`(bootRun 때 자동 기동) · 로컬 SQL·바인딩 로그 · 운영 JSON 로그 + `X-Request-Id` · springdoc → `contracts/openapi.json` 스냅샷 테스트 · Kotlin non-null → `required` 변환기 · Testcontainers 통합 테스트 · MockK 단위 테스트 · ArchUnit 레이어 규칙 · ktlint · `http/*.http` |
-| `nextjs/` | Next.js 16 (App Router) · React 19 · Node 24 · pnpm | Tailwind 4 · Vitest + Testing Library · Playwright E2E · ESLint · Prettier · `typecheck` 스크립트 |
-| `fullstack/` | `apps/api`(kotlin-spring과 같은 스택) + `apps/web`(React 19 · Vite · TypeScript · Node 24 · pnpm) | 계약 파이프라인 `openapi.json` → `openapi-typescript` → `openapi-fetch` + `unwrap()`(ProblemDetail → `ApiError`) · FSD 레이아웃과 ESLint 레이어 규칙 · vite proxy 같은 출처 · 시간대 명시 포맷 · 모노레포 CI(api · web · contract · ci-gate) |
+| `nextjs/` | Next.js 16 (App Router) · React 19 · Node 24 · pnpm | Tailwind 4 · Vitest + Testing Library · Playwright E2E · ESLint 9 · Prettier · `typecheck` 스크립트 |
+| `fullstack/` | `apps/api`(kotlin-spring과 같은 스택) + `apps/web`(React 19 · Vite · TypeScript · Node 24 · pnpm) | 계약 파이프라인 `openapi.json` → `openapi-typescript` → `openapi-fetch` + `unwrap()`(ProblemDetail → `ApiError`) · FSD 레이아웃과 ESLint 10 레이어 규칙 · vite proxy 같은 출처 · 시간대 명시 포맷 · 모노레포 CI(api · web · contract · ci-gate) |
 
 예시 도메인은 모두 **기사(article)** 하나다: 초안 작성 → 조회 → 발행, 이미 발행이면 409. 레이어·마이그레이션·상태 전이·계약이 한 흐름에 다 나온다. 새 프로젝트에서는 지우고 시작한다. 지울 파일 목록은 kit README의 체크리스트에 있다.
 
