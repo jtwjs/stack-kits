@@ -1,0 +1,101 @@
+# fullstack kit 의 CI. degit 후 이 kit 폴더가 레포 루트가 된다는 전제로 경로를 쓴다.
+# 브랜치 보호의 필수 체크는 ci-gate 하나. 바뀐 쪽 잡만 돌고, 건너뛴(skipped) 잡은 통과로 친다.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+            web:
+              - 'apps/web/**'
+              - 'apps/api/contracts/**'
+
+  api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        # apps/api/build.gradle.kts 의 toolchain(JavaLanguageVersion.of(21))과 같아야 한다. 하드코딩은 이 한 곳뿐
+        with: { distribution: temurin, java-version: "21" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: format
+        run: ./gradlew ktlintCheck
+      - name: test # Testcontainers(MySQL) · 계약 스냅샷(contracts/openapi.json) 포함
+        run: ./gradlew test
+      - name: build
+        run: ./gradlew build -x test
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: apps/web/package.json }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: apps/web/.nvmrc
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: verify # format:check → lint → typecheck → test → build
+        run: pnpm verify
+
+  # 계약 스냅샷(api 가 커밋한 openapi.json) → 생성 타입(generated.ts) 이 커밋된 것과 같은지. 스냅샷은 다시 만들지 않는다
+  contract:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: apps/web/package.json }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: apps/web/.nvmrc
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm gen:api
+      - name: 생성 타입이 커밋본과 같다 (다르면 pnpm gen:api 후 커밋)
+        run: git diff --exit-code src/shared/api/generated.ts
+
+  ci-gate:
+    if: always()
+    needs: [changes, api, web, contract]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 실패·취소가 하나라도 있으면 실패 (skipped 는 바뀌지 않은 쪽이라 통과)
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'to_entries | all(.value.result == "success" or .value.result == "skipped")'

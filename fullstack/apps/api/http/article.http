@@ -1,0 +1,20 @@
+### 기사 작성 — 201
+POST http://localhost:8080/api/articles
+Content-Type: application/json
+
+{ "title": "첫 기사", "body": "본문" }
+
+### 기사 조회
+GET http://localhost:8080/api/articles/1
+
+### 기사 발행 — 초안이면 200, 이미 발행이면 409
+POST http://localhost:8080/api/articles/1/publish
+
+### 검증 실패 — 400
+POST http://localhost:8080/api/articles
+Content-Type: application/json
+
+{ "title": "" }
+
+### 기사 목록 — 최신순
+GET http://localhost:8080/api/articles

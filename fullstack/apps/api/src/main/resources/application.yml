@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: app
+  profiles:
+    default: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate # 스키마 변경은 Flyway 로만. 엔티티와 어긋나면 기동 실패
+  flyway:
+    enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
