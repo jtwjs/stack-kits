@@ -27,4 +27,14 @@ class ArchitectureTest {
             .dependOnClassesThat()
             .resideInAPackage("org.springframework.web..")
             .allowEmptyShould(true)
+
+    @ArchTest
+    val domainIsPure = // domain 패키지는 Spring · JPA 를 모른다 — 규칙 계산(decide)은 순수 함수로 남긴다
+        noClasses()
+            .that()
+            .resideInAPackage("..domain..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage("org.springframework..", "jakarta.persistence..")
+            .allowEmptyShould(true)
 }
