@@ -67,4 +67,15 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
   },
   ...restrictions,
+  {
+    // 300줄(빈 줄·주석 제외) 넘으면 경고만 — 섹션·훅·model 계산을 뺄 신호다(harness rules/fsd.md §6)
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: TEST_FILES,
+    rules: {
+      "max-lines": [
+        "warn",
+        { max: 300, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
 ]);
