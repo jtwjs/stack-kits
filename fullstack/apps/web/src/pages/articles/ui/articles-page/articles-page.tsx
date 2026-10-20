@@ -7,7 +7,7 @@ type State =
   | { kind: "ok"; articles: Article[] }
   | { kind: "error"; message: string };
 
-export function ArticlesPage() {
+export const ArticlesPage = () => {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
@@ -35,4 +35,4 @@ export function ArticlesPage() {
       {state.kind === "ok" && <ArticleList articles={state.articles} />}
     </main>
   );
-}
+};

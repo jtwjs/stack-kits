@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { draftArticle, publishedArticle } from "../fixtures";
-import { ArticleList } from "./ArticleList";
+import { draftArticle, publishedArticle } from "../../fixtures";
+import { ArticleList } from "./article-list";
 
 describe("ArticleList", () => {
   it("제목·상태·발행 시각(서비스 시간대)을 보여 준다", () => {

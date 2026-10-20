@@ -2,10 +2,10 @@
 export const APP_TIME_ZONE = "Asia/Seoul";
 
 /** ISO 시각을 `YYYY-MM-DD HH:mm`(24시간) 으로. timeZone 을 항상 명시한다. */
-export function formatDateTime(
+export const formatDateTime = (
   iso: string,
   timeZone: string = APP_TIME_ZONE,
-): string {
+): string => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -18,4 +18,4 @@ export function formatDateTime(
   const get = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((p) => p.type === type)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
-}
+};

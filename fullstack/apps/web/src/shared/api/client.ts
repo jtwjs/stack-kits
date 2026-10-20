@@ -24,7 +24,9 @@ export const api = createClient<paths>({
 type FetchResult<T> = { data?: T; error?: unknown; response: Response };
 
 // 성공이면 data 를, 실패면 ApiError 를 던진다. 화면 코드는 { data, error } 분기를 하지 않는다.
-export async function unwrap<T>(request: Promise<FetchResult<T>>): Promise<T> {
+export const unwrap = async <T>(
+  request: Promise<FetchResult<T>>,
+): Promise<T> => {
   const { data, error, response } = await request;
   if (response.ok) return data as T;
   // RFC 9457 고정 필드(detail·title)만 읽는다. 계약의 ProblemDetail 스키마는 에러를 문서화한 엔드포인트가
@@ -39,4 +41,4 @@ export async function unwrap<T>(request: Promise<FetchResult<T>>): Promise<T> {
         ? title
         : response.statusText;
   throw new ApiError(response.status, message);
-}
+};

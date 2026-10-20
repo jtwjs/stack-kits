@@ -5,6 +5,4 @@ const LABELS: Record<ArticleStatus, string> = {
   PUBLISHED: "발행됨",
 };
 
-export function statusLabel(status: ArticleStatus): string {
-  return LABELS[status];
-}
+export const statusLabel = (status: ArticleStatus): string => LABELS[status];

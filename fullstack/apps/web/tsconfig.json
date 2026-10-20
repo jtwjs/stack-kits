@@ -19,5 +19,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "e2e", "*.ts"]
+  "include": ["src", "e2e", ".storybook", "*.ts"]
 }

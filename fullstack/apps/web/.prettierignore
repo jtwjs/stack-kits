@@ -3,5 +3,6 @@ node_modules
 pnpm-lock.yaml
 playwright-report
 test-results
+storybook-static
 # 생성물. 정본은 ../api/contracts/openapi.json 이고 pnpm gen:api 가 다시 쓴다
 src/shared/api/generated.ts

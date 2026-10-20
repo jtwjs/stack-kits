@@ -1,8 +1,10 @@
 import { formatDateTime } from "@/shared/lib";
-import { statusLabel } from "../model/status";
-import type { Article } from "../model/types";
+import { statusLabel } from "../../model/status";
+import type { Article } from "../../model/types";
 
-export function ArticleList({ articles }: { articles: Article[] }) {
+export type ArticleListProps = { articles: Article[] };
+
+export const ArticleList = ({ articles }: ArticleListProps) => {
   if (articles.length === 0) return <p>기사가 없습니다.</p>;
   return (
     <ul>
@@ -22,4 +24,4 @@ export function ArticleList({ articles }: { articles: Article[] }) {
       ))}
     </ul>
   );
-}
+};

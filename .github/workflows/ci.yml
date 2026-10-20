@@ -105,6 +105,9 @@ jobs:
         run: pnpm gen:api && git diff --exit-code src/shared/api/generated.ts
       - name: verify # format:check → lint → typecheck → test → build
         run: pnpm verify
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: stories # Storybook 스토리를 chromium 에서 렌더 + play
+        run: pnpm test:stories:all
 
   ci-gate:
     if: always()
