@@ -1,0 +1,10 @@
+dist
+node_modules
+pnpm-lock.yaml
+playwright-report
+test-results
+storybook-static
+# 백엔드 계약 스냅샷(백엔드가 만든 그대로 둔다)
+contracts/openapi.json
+# 생성물. 정본은 contracts/openapi.json 이고 pnpm gen:api 가 다시 쓴다
+src/shared/api/generated.ts

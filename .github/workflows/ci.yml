@@ -109,9 +109,32 @@ jobs:
       - name: stories # Storybook 스토리를 chromium 에서 렌더 + play
         run: pnpm test:stories:all
 
+  react-vite:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: react-vite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: react-vite/package.json }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: react-vite/.nvmrc
+          cache: pnpm
+          cache-dependency-path: react-vite/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: contract # 계약 스냅샷 → 생성 타입이 커밋본과 같다
+        run: pnpm gen:api && git diff --exit-code src/shared/api/generated.ts
+      - name: verify # format:check → lint → typecheck → test → build
+        run: pnpm verify
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: stories # Storybook 스토리를 chromium 에서 렌더 + play
+        run: pnpm test:stories:all
+
   ci-gate:
     if: always()
-    needs: [kotlin-spring, nextjs, nextjs-e2e, fullstack-api, fullstack-web]
+    needs: [kotlin-spring, nextjs, nextjs-e2e, fullstack-api, fullstack-web, react-vite]
     runs-on: ubuntu-latest
     steps:
       - name: 모든 kit 잡이 성공해야 통과 (skipped·cancelled 도 실패로 친다)

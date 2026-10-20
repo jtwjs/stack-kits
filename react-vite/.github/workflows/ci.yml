@@ -1,0 +1,58 @@
+# react-vite kit 의 CI. degit 후 이 kit 폴더가 레포 루트가 된다는 전제로 경로를 쓴다.
+# 브랜치 보호의 필수 체크는 ci-gate 하나.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # 계약 스냅샷(contracts/openapi.json) → 생성 타입이 커밋본과 같다. 다르면 pnpm gen:api 후 커밋
+      - name: contract
+        run: pnpm gen:api && git diff --exit-code src/shared/api/generated.ts
+      - name: verify # format:check → lint → typecheck → test → build
+        run: pnpm verify
+
+  # 스토리를 chromium 에서 렌더하고 play 를 돌린다. PR 은 base 와 달라진 파일이 닿는 스토리만, main 은 전부
+  stories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # --changed 가 base 브랜치와 비교한다
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: stories (PR — 바뀐 것만)
+        if: github.event_name == 'pull_request'
+        run: pnpm exec vitest run --project storybook --changed origin/${{ github.base_ref }}
+      - name: stories (main — 전부)
+        if: github.event_name != 'pull_request'
+        run: pnpm test:stories:all
+
+  ci-gate:
+    if: always()
+    needs: [web, stories]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 실패·취소가 하나라도 있으면 실패
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'to_entries | all(.value.result == "success")'
