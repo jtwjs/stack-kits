@@ -10,6 +10,8 @@ import tseslint from "typescript-eslint";
 const LAYERS = ["app", "pages", "widgets", "features", "entities", "shared"];
 // *.msw.* 는 테스트·스토리가 쓰는 MSW 핸들러. 픽스처를 import 하고 번들에 들어가지 않는다
 const TEST_FILES = ["**/*.test.*", "**/*.stories.*", "**/*.msw.*"];
+// 300줄 경고에서 빼는 것: 테스트·스토리·MSW + 큰 픽스처 데이터
+const MAX_LINES_IGNORES = [...TEST_FILES, "**/fixtures.ts", "**/*.fixture.ts"];
 
 const layerRule = (layer) => ({
   group: LAYERS.slice(0, LAYERS.indexOf(layer)).flatMap((upper) => [
@@ -81,7 +83,7 @@ export default defineConfig([
   {
     // 300줄(빈 줄·주석 제외) 넘으면 경고만 — 섹션·훅·model 계산을 뺄 신호다(harness rules/fsd.md §6)
     files: ["src/**/*.{ts,tsx}"],
-    ignores: TEST_FILES,
+    ignores: MAX_LINES_IGNORES,
     rules: {
       "max-lines": [
         "warn",

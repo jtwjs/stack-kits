@@ -47,6 +47,7 @@ cd my-api && git init
 - kit에는 `.claude/`를 넣지 않는다. `nextjs/AGENTS.md`의 `nextjs-agent-rules` 블록은 예외다(`next dev`가 다시 써 넣는다).
 - web과 server를 같이 쓰면 `fullstack` 하나로 받는다. 단일 kit 두 개를 겹치면 레포 안에 레포가 생긴다.
 - `react-vite`와 `fullstack/apps/web`은 같은 뼈대다. 한쪽을 고치면 다른 쪽도 같이 고친다.
+- 기존 레포에 kit의 lint 규칙을 들일 때는 `warn`으로 넣고 경고 수를 센 뒤, 0이 되면 `error`로 올린다. 바로 `error`로 넣으면 기존 코드에서 lint가 깨져 규칙째 빠지기 쉽다.
 - 버전은 안정판(GA)만 쓴다. 의존성은 Dependabot이 올린다.
 
 ## 관리자용
