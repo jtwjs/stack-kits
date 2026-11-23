@@ -57,12 +57,13 @@ export const oneExportedComponent = {
     },
   },
   create(context) {
-    let seen = 0;
+    const seen = new Set();
     return {
       ExportNamedDeclaration(node) {
         const count = (target, name) => {
-          seen += 1;
-          if (seen > 1)
+          if (seen.has(name)) return;
+          seen.add(name);
+          if (seen.size > 1)
             context.report({
               node: target,
               messageId: "tooMany",

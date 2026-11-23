@@ -38,7 +38,7 @@ tester.run("no-comments", noComments, {
     },
     {
       code: "// eslint-disable-next-line\nconsole.log(1);",
-      errors: [{ messageId: "disableWithoutReason" }],
+      errors: [{ messageId: "disableAll" }],
     },
     {
       code: "// eslint-disable-next-line no-console\nconsole.log(1);",
@@ -47,6 +47,10 @@ tester.run("no-comments", noComments, {
     {
       code: "// prettier 설정 메모\nconst a = 1;",
       errors: [{ messageId: "noComment" }],
+    },
+    {
+      code: "// eslint-disable-next-line -- 이유\nconst a = 1;",
+      errors: [{ messageId: "disableAll" }],
     },
     {
       code: "/* eslint no-console: off */\nconst a = 1;",
@@ -153,6 +157,8 @@ tester.run("one-exported-component", oneExportedComponent, {
     `const Table = () => null;
      const COLUMNS = ["a"];
      export { Table, COLUMNS };`,
+    `const Table = () => null;
+     export { Table, Table as DataTable };`,
   ],
   invalid: [
     {
@@ -174,32 +180,41 @@ tester.run("one-exported-component", oneExportedComponent, {
   ],
 });
 
+const STATE = [
+  "const [items, setItems] = useState([]);",
+  "const [user, setUser] = React.useState({});",
+  "const [count, setCount] = useState(0);",
+  "const [map, setMap] = useReducer(reducer, {});",
+].join("\n");
+
 tester.run("no-mutation-in-set-state", noMutationInSetState, {
   valid: [
-    "setItems((prev) => [...prev, item]);",
-    "setItems((p) => [...p].sort());",
-    "setItems((p) => p.filter(isActive).sort());",
-    "setItems((prev) => { const next = [...prev]; next.push(item); return next; });",
-    "setUser((prev) => ({ ...prev, name }));",
-    "setTimeout(() => { ref.current = count; }, 10);",
-    "setInterval(() => queue.shift(), 10);",
-    "setItems(items.toSorted());",
+    `${STATE}\nsetItems((prev) => [...prev, item]);`,
+    `${STATE}\nsetItems((p) => [...p].sort());`,
+    `${STATE}\nsetItems((p) => p.filter(isActive).sort());`,
+    `${STATE}\nsetItems((prev) => { const next = [...prev]; next.push(item); return next; });`,
+    `${STATE}\nsetUser((prev) => ({ ...prev, name }));`,
+    `${STATE}\nsetTimeout(() => { ref.current = count; }, 10);`,
+    `${STATE}\nsetInterval(() => queue.shift(), 10);`,
+    `${STATE}\nsetItems(items.toSorted());`,
+    "setHandler((e) => { e.v = 1; });",
+    "const [a, b] = pair; b((x) => { x.push(1); });",
   ],
   invalid: [
     {
-      code: "setItems((prev) => { prev.push(item); return prev; });",
+      code: `${STATE}\nsetItems((prev) => { prev.push(item); return prev; });`,
       errors: [{ messageId: "mutated", data: { name: "prev" } }],
     },
     {
-      code: "setUser((prev) => { prev.profile.name = name; return prev; });",
+      code: `${STATE}\nsetUser((prev) => { prev.profile.name = name; return prev; });`,
       errors: [{ messageId: "mutated", data: { name: "prev" } }],
     },
     {
-      code: "setCount(function (prev) { prev.n++; return prev; });",
+      code: `${STATE}\nsetCount(function (prev) { prev.n++; return prev; });`,
       errors: [{ messageId: "mutated", data: { name: "prev" } }],
     },
     {
-      code: "setMap((m) => { delete m.key; return m; });",
+      code: `${STATE}\nsetMap((m) => { delete m.key; return m; });`,
       errors: [{ messageId: "mutated", data: { name: "m" } }],
     },
   ],
