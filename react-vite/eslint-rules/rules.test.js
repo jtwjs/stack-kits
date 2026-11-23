@@ -4,6 +4,7 @@ import { afterAll, describe, it } from "vitest";
 
 import { hooksOrder } from "./hooks-order.js";
 import { noComments } from "./no-comments.js";
+import { noMutationInSetState } from "./no-mutation-in-set-state.js";
 import { oneExportedComponent } from "./one-exported-component.js";
 
 RuleTester.afterAll = afterAll;
@@ -47,6 +48,10 @@ tester.run("no-comments", noComments, {
       code: "// prettier 설정 메모\nconst a = 1;",
       errors: [{ messageId: "noComment" }],
     },
+    {
+      code: "/* eslint no-console: off */\nconst a = 1;",
+      errors: [{ messageId: "inlineConfig" }],
+    },
   ],
 });
 
@@ -65,6 +70,30 @@ tester.run("hooks-order", hooksOrder, {
       const user = getUser();
       const [a] = useState(0);
       return a;
+    };`,
+    `const Foo = () => {
+      const ref = useRef(null);
+      const initial = useContext(Ctx);
+      const [n] = useState(initial);
+      return n;
+    };`,
+    `const Foo = () => {
+      const { data } = useArticles();
+      const first = data[0];
+      const [selected] = useState(first);
+      return selected;
+    };`,
+    `const Foo = () => {
+      useEffect(() => {}, []);
+      server.use(handler);
+      vi.useFakeTimers();
+      return null;
+    };`,
+    `const Foo = () => {
+      const [state, action] = useActionState(fn, null);
+      const query = useArticles();
+      useImperativeHandle(ref, () => ({}));
+      return null;
     };`,
   ],
   invalid: [
@@ -92,6 +121,23 @@ tester.run("hooks-order", hooksOrder, {
       };`,
       errors: [{ messageId: "outOfOrder" }],
     },
+    {
+      code: `const Foo = () => {
+        const id = useId();
+        const initial = useContext(Ctx);
+        const [n] = useState(0);
+        return n;
+      };`,
+      errors: [{ messageId: "outOfOrder" }],
+    },
+    {
+      code: `const Foo = () => {
+        useImperativeHandle(ref, () => ({}));
+        const [optimistic] = useOptimistic(items);
+        return null;
+      };`,
+      errors: [{ messageId: "outOfOrder" }],
+    },
   ],
 });
 
@@ -102,6 +148,11 @@ tester.run("one-exported-component", oneExportedComponent, {
     `export const Table = () => null;
      export const COLUMNS = ["a"];
      export const formatRow = (row) => row;`,
+    `export const ArticlesRoute = lazy(() => import("./articles"));
+     export const SettingsRoute = lazy(() => import("./settings"));`,
+    `const Table = () => null;
+     const COLUMNS = ["a"];
+     export { Table, COLUMNS };`,
   ],
   invalid: [
     {
@@ -113,6 +164,43 @@ tester.run("one-exported-component", oneExportedComponent, {
       code: `export const Table = () => null;
              export const Cell = memo(() => null);`,
       errors: [{ messageId: "tooMany", data: { name: "Cell" } }],
+    },
+    {
+      code: `const A = () => null;
+             const B = () => null;
+             export { A, B };`,
+      errors: [{ messageId: "tooMany", data: { name: "B" } }],
+    },
+  ],
+});
+
+tester.run("no-mutation-in-set-state", noMutationInSetState, {
+  valid: [
+    "setItems((prev) => [...prev, item]);",
+    "setItems((p) => [...p].sort());",
+    "setItems((p) => p.filter(isActive).sort());",
+    "setItems((prev) => { const next = [...prev]; next.push(item); return next; });",
+    "setUser((prev) => ({ ...prev, name }));",
+    "setTimeout(() => { ref.current = count; }, 10);",
+    "setInterval(() => queue.shift(), 10);",
+    "setItems(items.toSorted());",
+  ],
+  invalid: [
+    {
+      code: "setItems((prev) => { prev.push(item); return prev; });",
+      errors: [{ messageId: "mutated", data: { name: "prev" } }],
+    },
+    {
+      code: "setUser((prev) => { prev.profile.name = name; return prev; });",
+      errors: [{ messageId: "mutated", data: { name: "prev" } }],
+    },
+    {
+      code: "setCount(function (prev) { prev.n++; return prev; });",
+      errors: [{ messageId: "mutated", data: { name: "prev" } }],
+    },
+    {
+      code: "setMap((m) => { delete m.key; return m; });",
+      errors: [{ messageId: "mutated", data: { name: "m" } }],
     },
   ],
 });

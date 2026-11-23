@@ -18,12 +18,19 @@ const isComponentInit = (init) => {
           ? callee.property.name
           : null;
     return (
-      (name === "memo" || name === "forwardRef" || name === "lazy") &&
-      init.arguments.length > 0
+      (name === "memo" || name === "forwardRef") && init.arguments.length > 0
     );
   }
   return false;
 };
+
+const isComponentDefinition = (definition) =>
+  definition?.type === "FunctionDeclaration"
+    ? isPascal(definition.id?.name ?? "")
+    : definition?.type === "VariableDeclarator" &&
+      definition.id.type === "Identifier" &&
+      isPascal(definition.id.name) &&
+      isComponentInit(definition.init);
 
 const exportedComponents = (declaration) => {
   if (!declaration) return [];
@@ -53,14 +60,24 @@ export const oneExportedComponent = {
     let seen = 0;
     return {
       ExportNamedDeclaration(node) {
-        for (const component of exportedComponents(node.declaration)) {
+        const count = (target, name) => {
           seen += 1;
           if (seen > 1)
             context.report({
-              node: component,
+              node: target,
               messageId: "tooMany",
-              data: { name: component.id.name },
+              data: { name },
             });
+        };
+        for (const component of exportedComponents(node.declaration))
+          count(component, component.id.name);
+        if (node.source) return;
+        const scope = context.sourceCode.getScope(node);
+        for (const specifier of node.specifiers) {
+          if (specifier.local.type !== "Identifier") continue;
+          const variable = scope.set.get(specifier.local.name);
+          if (variable?.defs.some((def) => isComponentDefinition(def.node)))
+            count(specifier, specifier.local.name);
         }
       },
     };

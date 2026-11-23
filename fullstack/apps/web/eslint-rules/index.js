@@ -2,6 +2,7 @@
 // 키트는 폴더 하나만 복사되므로 패키지로 빼지 않고 키트 안에 둔다.
 import { hooksOrder } from "./hooks-order.js";
 import { noComments } from "./no-comments.js";
+import { noMutationInSetState } from "./no-mutation-in-set-state.js";
 import { oneExportedComponent } from "./one-exported-component.js";
 
 export const local = {
@@ -9,6 +10,7 @@ export const local = {
   rules: {
     "hooks-order": hooksOrder,
     "no-comments": noComments,
+    "no-mutation-in-set-state": noMutationInSetState,
     "one-exported-component": oneExportedComponent,
   },
 };

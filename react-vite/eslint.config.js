@@ -41,18 +41,18 @@ const fixtureRule = {
   message:
     "픽스처·MSW 핸들러는 *.test.* · *.stories.* · *.msw.* 에서만 import 한다.",
 };
-const publicApiRule = {
+// @x 슬롯 예외는 entities 안에서만. 다른 레이어가 @x 경로로 들어오면 깊은 import 로 막힌다
+const publicApiRule = (layer) => ({
   group: [
-    ...SLICED.map((layer) => `@/${layer}/*/**`),
+    ...SLICED.map((sliced) => `@/${sliced}/*/**`),
     "@/shared/*/*/**",
-    "!@/entities/*/@x",
-    "!@/entities/*/@x/*",
+    ...(layer === "entities" ? ["!@/entities/*/@x", "!@/entities/*/@x/*"] : []),
   ],
   message:
     "슬라이스 안쪽 파일 대신 슬라이스의 index.ts(public API)에서 import 한다(shared 는 @/shared/<segment>/<module> 까지) — 안쪽 경로에 기대면 슬라이스 안을 고칠 때마다 바깥이 깨진다. entities 교차 import 는 @/entities/<provider>/@x/<consumer> 로",
-};
+});
 const modelToUiRule = {
-  group: ["../ui", "../ui/**", "../../ui/**"],
+  regex: "^(\\.\\./)+ui(/|$)",
   message:
     "model 에서 ui 를 import 하지 말고 필요한 타입·계산을 model 로 옮긴다 — model 은 화면 없이 테스트하는 층이라 ui 를 알면 순수 계산이 화면에 묶인다",
 };
@@ -61,7 +61,7 @@ const modelToUiRule = {
 const restrictions = LAYERS.flatMap((layer) => {
   const files = [`src/${layer}/**/*.{ts,tsx}`];
   const upper = LAYERS.indexOf(layer) > 0 ? [layerRule(layer)] : [];
-  const body = [...upper, fixtureRule, publicApiRule];
+  const body = [...upper, fixtureRule, publicApiRule(layer)];
   return [
     {
       files,
@@ -115,7 +115,8 @@ const syntax = {
       "function 선언 대신 const 화살표 함수를 쓴다 — 함수 모양이 하나면 호이스팅 · this 바인딩 차이를 신경 쓸 일이 없다",
   },
   noFunctionExpression: {
-    selector: "FunctionExpression:not(MethodDefinition > FunctionExpression)",
+    selector:
+      "FunctionExpression:not(MethodDefinition > FunctionExpression):not(Property[method=true] > FunctionExpression):not(Property[kind=/^(get|set)$/] > FunctionExpression)",
     message:
       "function 표현식 대신 화살표 함수를 쓴다 — 함수 모양이 하나면 this 바인딩 차이를 신경 쓸 일이 없다",
   },
@@ -124,18 +125,6 @@ const syntax = {
       "TSAsExpression > .typeAnnotation:not(TSTypeReference[typeName.name='const']), TSTypeAssertion",
     message:
       "as 단언 대신 타입 가드 · 좁히기(typeof · in · 판별 유니온)로 타입을 증명한다 — 단언은 컴파일러를 끄는 것이라 실제 값이 다르면 런타임에서야 터진다. as const 는 허용",
-  },
-  noMutationInSetState: {
-    selector:
-      "CallExpression[callee.name=/^set[A-Z]/] > ArrowFunctionExpression CallExpression[callee.property.name=/^(push|pop|shift|unshift|splice|sort|reverse|fill|copyWithin)$/]",
-    message:
-      "setState 콜백 안에서 배열을 바꾸지 말고 복사본을 만든다([...prev, item] · prev.filter · toSorted) — 같은 참조를 돌려주면 React 가 바뀐 줄 모르고 다시 그리지 않는다",
-  },
-  noAssignInSetState: {
-    selector:
-      "CallExpression[callee.name=/^set[A-Z]/] > ArrowFunctionExpression AssignmentExpression > MemberExpression.left",
-    message:
-      "setState 콜백 안에서 필드에 대입하지 말고 복사본을 만든다({ ...prev, field }) — 같은 참조를 돌려주면 React 가 바뀐 줄 모르고 다시 그리지 않는다",
   },
   noExportDefault: {
     selector: "ExportDefaultDeclaration",
@@ -162,8 +151,6 @@ const COMMON_SYNTAX = [
   syntax.noFunctionDeclaration,
   syntax.noFunctionExpression,
   syntax.noTypeAssertion,
-  syntax.noMutationInSetState,
-  syntax.noAssignInSetState,
 ];
 const restrictedSyntax = (...extra) => ["error", ...COMMON_SYNTAX, ...extra];
 
@@ -248,6 +235,7 @@ export default defineConfig([
       "@typescript-eslint/no-explicit-any": "error",
       "local/no-comments": "error",
       "local/hooks-order": "error",
+      "local/no-mutation-in-set-state": "error",
     },
   },
   {
