@@ -2,7 +2,9 @@ import { formatDateTime } from "@/shared/lib";
 import { statusLabel } from "../../model/status";
 import type { Article } from "../../model/types";
 
-export type ArticleListProps = { articles: Article[] };
+export interface ArticleListProps {
+  articles: Article[];
+}
 
 export const ArticleList = ({ articles }: ArticleListProps) => {
   if (articles.length === 0) return <p>기사가 없습니다.</p>;

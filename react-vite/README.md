@@ -28,19 +28,30 @@ e2e/{specs,fixtures,pom}  Playwright. spec 은 fixtures 의 test·expect 와 pom
 
 ## 검증 명령
 
-| 단계      | 명령                                                               | 비고                                                                                                                                                                     |
-| --------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| format    | `pnpm format:check`                                                | `generated.ts`·`contracts/openapi.json`은 제외                                                                                                                           |
-| lint      | `pnpm lint`                                                        | FSD 레이어 방향, 픽스처·MSW 핸들러는 `*.test.*`·`*.stories.*`·`*.msw.*`에서만, JSX 속성에 여러 줄 화살표 금지                                                            |
-| typecheck | `pnpm typecheck`                                                   |                                                                                                                                                                          |
-| test      | `pnpm test`                                                        | Vitest `unit` 프로젝트(jsdom, 브라우저 없음). API는 MSW(`src/shared/test/server.ts`). `asyncUtilTimeout` 4초                                                             |
-| stories   | `pnpm test:stories`                                                | Vitest `storybook` 프로젝트(chromium). `--changed`: 바뀐 파일을 import 하는 스토리만. `.storybook/`이 바뀌면 전부. 전체는 `pnpm test:stories:all`. verify 밖, CI 별도 잡 |
-| build     | `pnpm build`                                                       |                                                                                                                                                                          |
-| e2e       | `pnpm test:e2e`                                                    | 브라우저 설치 필요(`pnpm exec playwright install chromium`). api는 `page.route`로 고정. verify 밖                                                                        |
-| 한 번에   | `pnpm verify`                                                      | format:check → lint → typecheck → test → build                                                                                                                           |
-| 계약      | `pnpm gen:api && git diff --exit-code src/shared/api/generated.ts` | CI `contract` 단계와 같다                                                                                                                                                |
+| 단계      | 명령                                                               | 비고                                                                                                                                                                                                                                                                                             |
+| --------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| format    | `pnpm format:check`                                                | `generated.ts`·`contracts/openapi.json`은 제외                                                                                                                                                                                                                                                   |
+| lint      | `pnpm lint`                                                        | 규칙과 이유는 `eslint.config.js`의 메시지에 있다. 커스텀 규칙은 `eslint-rules/`(테스트는 `pnpm test`가 같이 돈다). `src`에는 주석을 쓰지 않는다. 도구 지시 주석(eslint-disable · `@ts-expect-error` · `/// <reference>` · `prettier-ignore` 등)만 예외이고, eslint-disable 은 `-- 이유`를 붙인다 |
+| typecheck | `pnpm typecheck`                                                   |                                                                                                                                                                                                                                                                                                  |
+| test      | `pnpm test`                                                        | Vitest `unit` 프로젝트(jsdom, 브라우저 없음). API는 MSW(`src/shared/test/server.ts`). `asyncUtilTimeout` 4초                                                                                                                                                                                     |
+| stories   | `pnpm test:stories`                                                | Vitest `storybook` 프로젝트(chromium). `--changed`: 바뀐 파일을 import 하는 스토리만. `.storybook/`이 바뀌면 전부. 전체는 `pnpm test:stories:all`. verify 밖, CI 별도 잡                                                                                                                         |
+| build     | `pnpm build`                                                       |                                                                                                                                                                                                                                                                                                  |
+| e2e       | `pnpm test:e2e`                                                    | 브라우저 설치 필요(`pnpm exec playwright install chromium`). api는 `page.route`로 고정. verify 밖                                                                                                                                                                                                |
+| 한 번에   | `pnpm verify`                                                      | format:check → lint → typecheck → test → build                                                                                                                                                                                                                                                   |
+| 계약      | `pnpm gen:api && git diff --exit-code src/shared/api/generated.ts` | CI `contract` 단계와 같다                                                                                                                                                                                                                                                                        |
 
 설치는 `pnpm install --frozen-lockfile`(CI와 같다). Storybook 화면은 `pnpm storybook`(:6006), 정적 빌드는 `pnpm build-storybook`.
+
+## 코드 메모
+
+`src`에 주석을 쓰지 않는 대신, 코드만 봐서는 모를 것을 여기 둔다.
+
+- `shared/api/client.ts` `fetchAtCallTime`: openapi-fetch는 생성 때 받은 fetch를 붙잡는다. 호출 시점에 `globalThis.fetch`를 찾아야 테스트의 `vi.stubGlobal`이 먹는다
+- `shared/api/client.ts` `problemMessage`: 실패 응답은 RFC 9457 고정 필드(`detail` → `title`)만 읽는다. 계약의 ProblemDetail 스키마에 기대지 않아, 예시 도메인을 지워도 컴파일된다
+- `shared/lib/format.ts` `APP_TIME_ZONE`: 화면 시각은 서비스 시간대로 고정한다. 런타임 TZ에 기대면 브라우저 · CI마다 다르게 찍힌다
+- `entities/*/api/*.msw.ts`: 테스트 · 스토리 전용. 경로 앞 `*`는 jsdom origin과 브라우저 origin을 둘 다 맞춘다
+- `shared/test/server.ts`: 기본 핸들러를 두지 않는다. shared는 entities를 import 하지 못하니 테스트가 `server.use(...)`로 붙인다
+- `entities/*/model/types.ts`: 응답 타입은 계약에서 생성된 것만 쓴다
 
 ## 테스트 자리
 
