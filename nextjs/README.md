@@ -34,4 +34,3 @@ pnpm dev
 `eslint-config-next`가 끌어오는 `eslint-plugin-react`(7.37.5) · `eslint-plugin-jsx-a11y`(6.10.2) · `eslint-plugin-import`(2.32.0)는 최신판도 peer가 ESLint 9까지다. ESLint 10으로 올리면 `react/display-name` 규칙이 ESLint 10에서 없어진 `context.getFilename()`을 불러 lint 자체가 깨진다(실측).
 
 세 플러그인이 ESLint 10을 peer에 넣으면 `pnpm add -D eslint@^10`으로 올린다. `fullstack` kit은 이 플러그인들을 쓰지 않아 ESLint 10이다.
-
