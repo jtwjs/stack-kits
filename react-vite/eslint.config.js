@@ -176,11 +176,6 @@ export default defineConfig([
     "src/shared/api/generated.ts",
   ]),
   {
-    // eslint-disable 같은 주석으로 규칙을 끄지 못한다 — 막을 이유가 없어진 규칙은 이 파일에서 고친다
-    files: ["src/**/*.{ts,tsx}"],
-    linterOptions: { noInlineConfig: true },
-  },
-  {
     files: ["**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,

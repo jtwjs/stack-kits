@@ -12,7 +12,6 @@ RuleTester.it = it;
 RuleTester.itOnly = it.only;
 
 const tester = new RuleTester({
-  linterOptions: { noInlineConfig: true },
   languageOptions: {
     parser: tseslint.parser,
     parserOptions: { ecmaFeatures: { jsx: true } },
@@ -20,21 +19,32 @@ const tester = new RuleTester({
 });
 
 tester.run("no-comments", noComments, {
-  valid: ["const total = sum(rows);"],
+  valid: [
+    "const total = sum(rows);",
+    "// eslint-disable-next-line no-console -- CLI 출력\nconsole.log(1);",
+    "/* eslint-disable no-console -- 스크립트 */\nconsole.log(1);",
+    "// @ts-expect-error 라이브러리 타입 누락\nconst a: number = 'x';",
+    '/// <reference types="vite/client" />\nconst a = 1;',
+    "// prettier-ignore\nconst m = [1,0,0,1];",
+    "const page = import(/* @vite-ignore */ path);",
+    "const v = /* #__PURE__ */ make();",
+    "/* istanbul ignore next */\nconst a = 1;",
+  ],
   invalid: [
     {
       code: "// 합계\nconst total = sum(rows);",
       errors: [{ messageId: "noComment" }],
     },
     {
-      code: "/* eslint-disable */\nconst a = 1;",
-      errors: [
-        { message: /has no effect because you have 'noInlineConfig'/ },
-        { messageId: "noComment" },
-      ],
+      code: "// eslint-disable-next-line\nconsole.log(1);",
+      errors: [{ messageId: "disableWithoutReason" }],
     },
     {
-      code: "// @ts-expect-error\nconst a: number = 'x';",
+      code: "// eslint-disable-next-line no-console\nconsole.log(1);",
+      errors: [{ messageId: "disableWithoutReason" }],
+    },
+    {
+      code: "// prettier 설정 메모\nconst a = 1;",
       errors: [{ messageId: "noComment" }],
     },
   ],

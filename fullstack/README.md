@@ -50,7 +50,7 @@ JDK 21이 필요하다. 기본 java가 다르면 `JAVA_HOME`을 21로 지정한�
 | 단계 | 명령 | 비고 |
 |---|---|---|
 | format | `pnpm format:check` | `generated.ts`는 제외 |
-| lint | `pnpm lint` | 규칙과 이유는 `eslint.config.js`의 메시지에 있다. 커스텀 규칙은 `eslint-rules/`(테스트는 `pnpm test`가 같이 돈다). `src`에는 주석을 쓰지 않는다(eslint-disable · `@ts-expect-error` 포함) |
+| lint | `pnpm lint` | 규칙과 이유는 `eslint.config.js`의 메시지에 있다. 커스텀 규칙은 `eslint-rules/`(테스트는 `pnpm test`가 같이 돈다). `src`에는 주석을 쓰지 않는다. 도구 지시 주석(eslint-disable · `@ts-expect-error` · `/// <reference>` · `prettier-ignore` 등)만 예외이고, eslint-disable 은 `-- 이유`를 붙인다 |
 | typecheck | `pnpm typecheck` | |
 | test | `pnpm test` | Vitest `unit` 프로젝트(jsdom, 브라우저 없음). API는 MSW(`src/shared/test/server.ts`). `asyncUtilTimeout` 4초 |
 | stories | `pnpm test:stories` | Vitest `storybook` 프로젝트(chromium). `--changed`: 바뀐 파일을 import 하는 스토리만. `.storybook/`이 바뀌면 전부. 전체는 `pnpm test:stories:all`. verify 밖 |
