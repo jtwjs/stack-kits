@@ -99,6 +99,16 @@ tester.run("hooks-order", hooksOrder, {
       useImperativeHandle(ref, () => ({}));
       return null;
     };`,
+    `const Foo = () => {
+      const total = useMemo(() => 1, []);
+      const [n] = useState({ total });
+      return n;
+    };`,
+    `const Foo = () => {
+      const total = useMemo(() => 1, []);
+      const [n] = useState(cfg[total]);
+      return n;
+    };`,
   ],
   invalid: [
     {
@@ -139,6 +149,22 @@ tester.run("hooks-order", hooksOrder, {
         useImperativeHandle(ref, () => ({}));
         const [optimistic] = useOptimistic(items);
         return null;
+      };`,
+      errors: [{ messageId: "outOfOrder" }],
+    },
+    {
+      code: `const Foo = () => {
+        const total = useMemo(() => 1, []);
+        const [n] = useState(cfg.total);
+        return n;
+      };`,
+      errors: [{ messageId: "outOfOrder" }],
+    },
+    {
+      code: `const Foo = () => {
+        const total = useMemo(() => 1, []);
+        const [n] = useState({ total: 0 });
+        return n;
       };`,
       errors: [{ messageId: "outOfOrder" }],
     },
@@ -199,6 +225,9 @@ tester.run("no-mutation-in-set-state", noMutationInSetState, {
     `${STATE}\nsetItems(items.toSorted());`,
     "setHandler((e) => { e.v = 1; });",
     "const [a, b] = pair; b((x) => { x.push(1); });",
+    `${STATE}\nsetMap((prev) => new Map(prev).set(key, value));`,
+    `${STATE}\nsetUser((prev) => Object.assign({}, prev, { name }));`,
+    `${STATE}\nsetUser(({ items }) => ({ items: [...items, item] }));`,
   ],
   invalid: [
     {
@@ -216,6 +245,24 @@ tester.run("no-mutation-in-set-state", noMutationInSetState, {
     {
       code: `${STATE}\nsetMap((m) => { delete m.key; return m; });`,
       errors: [{ messageId: "mutated", data: { name: "m" } }],
+    },
+    ...["set(key, value)", "add(key)", "delete(key)", "clear()"].map(
+      (call) => ({
+        code: `${STATE}\nsetMap((prev) => { prev.${call}; return prev; });`,
+        errors: [{ messageId: "mutated", data: { name: "prev" } }],
+      }),
+    ),
+    {
+      code: `${STATE}\nsetUser((prev) => Object.assign(prev, { name }));`,
+      errors: [{ messageId: "mutated", data: { name: "prev" } }],
+    },
+    {
+      code: `${STATE}\nsetUser(({ items }) => { items.push(item); return { items }; });`,
+      errors: [{ messageId: "mutated", data: { name: "items" } }],
+    },
+    {
+      code: `${STATE}\nsetUser(({ profile }) => { profile.name = name; return { profile }; });`,
+      errors: [{ messageId: "mutated", data: { name: "profile" } }],
     },
   ],
 });

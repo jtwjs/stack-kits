@@ -68,6 +68,19 @@ const referencedNames = (node, found = new Set()) => {
   if (node.type === "Identifier") found.add(node.name);
   for (const [key, value] of Object.entries(node)) {
     if (key === "parent") continue;
+    if (
+      node.type === "MemberExpression" &&
+      key === "property" &&
+      !node.computed
+    )
+      continue;
+    if (
+      node.type === "Property" &&
+      key === "key" &&
+      !node.shorthand &&
+      !node.computed
+    )
+      continue;
     for (const child of Array.isArray(value) ? value : [value])
       if (child && typeof child.type === "string")
         referencedNames(child, found);

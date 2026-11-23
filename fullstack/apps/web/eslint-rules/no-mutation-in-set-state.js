@@ -11,6 +11,10 @@ const MUTATING = new Set([
   "reverse",
   "fill",
   "copyWithin",
+  "set",
+  "add",
+  "delete",
+  "clear",
 ]);
 const STATE_HOOKS = new Set(["useState", "useReducer"]);
 
@@ -32,6 +36,27 @@ const stateHookName = (init) => {
     : null;
 };
 
+const paramNames = (pattern) => {
+  if (pattern?.type === "Identifier") return [pattern.name];
+  if (pattern?.type === "ObjectPattern")
+    return pattern.properties.flatMap((p) =>
+      paramNames(p.type === "RestElement" ? p.argument : p.value),
+    );
+  if (pattern?.type === "ArrayPattern")
+    return pattern.elements.flatMap((e) =>
+      paramNames(e?.type === "RestElement" ? e.argument : e),
+    );
+  if (pattern?.type === "AssignmentPattern") return paramNames(pattern.left);
+  return [];
+};
+
+const isObjectAssign = (callee) =>
+  callee.type === "MemberExpression" &&
+  callee.object.type === "Identifier" &&
+  callee.object.name === "Object" &&
+  callee.property.type === "Identifier" &&
+  callee.property.name === "assign";
+
 const updaterParam = (call, setters) => {
   const { callee } = call;
   if (callee.type !== "Identifier" || !setters.has(callee.name)) return null;
@@ -41,8 +66,8 @@ const updaterParam = (call, setters) => {
     updater?.type !== "FunctionExpression"
   )
     return null;
-  const param = updater.params[0];
-  return param?.type === "Identifier" ? { updater, name: param.name } : null;
+  const names = paramNames(updater.params[0]);
+  return names.length > 0 ? { updater, names } : null;
 };
 
 export const noMutationInSetState = {
@@ -60,21 +85,17 @@ export const noMutationInSetState = {
     const updaters = [];
     const touchesPrev = (node) => {
       const root = rootName(node);
-      return updaters.find(
-        ({ name, updater }) =>
-          name === root &&
+      const hit = updaters.find(
+        ({ names, updater }) =>
+          names.includes(root) &&
           node.range[0] >= updater.range[0] &&
           node.range[1] <= updater.range[1],
       );
+      return hit ? root : null;
     };
     const report = (node, target) => {
-      const hit = touchesPrev(target);
-      if (hit)
-        context.report({
-          node,
-          messageId: "mutated",
-          data: { name: hit.name },
-        });
+      const name = touchesPrev(target);
+      if (name) context.report({ node, messageId: "mutated", data: { name } });
     };
     return {
       VariableDeclarator(node) {
@@ -94,6 +115,8 @@ export const noMutationInSetState = {
           MUTATING.has(node.callee.property.name)
         )
           report(node, node.callee.object);
+        if (isObjectAssign(node.callee) && node.arguments[0])
+          report(node, node.arguments[0]);
       },
       "CallExpression:exit"(node) {
         if (updaters.at(-1)?.updater === node.arguments[0]) updaters.pop();

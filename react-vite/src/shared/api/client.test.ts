@@ -10,6 +10,12 @@ describe("unwrap", () => {
     ).resolves.toEqual([1, 2]);
   });
 
+  it("성공인데 본문이 없으면(204) undefined 대신 에러를 던진다", async () => {
+    await expect(
+      unwrap(Promise.resolve({ response: res(204) })),
+    ).rejects.toThrow("204");
+  });
+
   it("ProblemDetail 을 ApiError(status, detail) 로 바꾼다", async () => {
     const error = {
       status: 404,
