@@ -1,4 +1,5 @@
 // setState 업데이터 콜백이 받은 이전 상태(prev)를 직접 바꾸지 못하게 한다.
+// setter 는 useState · useReducer 구조 분해 두 번째 원소로 선언된 이름만 본다(setHandler 같은 일반 함수는 제외).
 // 콜백 인자에 닿는 변이만 잡는다 — 복사본([...prev] · prev.filter())을 정렬하거나 setTimeout 안에서 ref 를 바꾸는 건 통과.
 const MUTATING = new Set([
   "push",
@@ -11,7 +12,7 @@ const MUTATING = new Set([
   "fill",
   "copyWithin",
 ]);
-const NOT_SETTERS = /^set(Timeout|Interval|Immediate)$/;
+const STATE_HOOKS = new Set(["useState", "useReducer"]);
 
 const rootName = (node) => {
   let current = node;
@@ -19,11 +20,21 @@ const rootName = (node) => {
   return current?.type === "Identifier" ? current.name : null;
 };
 
-const updaterParam = (call) => {
+const stateHookName = (init) => {
+  if (init?.type !== "CallExpression") return null;
+  const { callee } = init;
+  if (callee.type === "Identifier") return callee.name;
+  return callee.type === "MemberExpression" &&
+    callee.object.type === "Identifier" &&
+    callee.object.name === "React" &&
+    callee.property.type === "Identifier"
+    ? callee.property.name
+    : null;
+};
+
+const updaterParam = (call, setters) => {
   const { callee } = call;
-  if (callee.type !== "Identifier") return null;
-  if (!/^set[A-Z]/.test(callee.name) || NOT_SETTERS.test(callee.name))
-    return null;
+  if (callee.type !== "Identifier" || !setters.has(callee.name)) return null;
   const updater = call.arguments[0];
   if (
     updater?.type !== "ArrowFunctionExpression" &&
@@ -45,6 +56,7 @@ export const noMutationInSetState = {
     },
   },
   create(context) {
+    const setters = new Set();
     const updaters = [];
     const touchesPrev = (node) => {
       const root = rootName(node);
@@ -65,8 +77,16 @@ export const noMutationInSetState = {
         });
     };
     return {
+      VariableDeclarator(node) {
+        const setter = node.id.type === "ArrayPattern" && node.id.elements[1];
+        if (
+          setter?.type === "Identifier" &&
+          STATE_HOOKS.has(stateHookName(node.init))
+        )
+          setters.add(setter.name);
+      },
       CallExpression(node) {
-        const found = updaterParam(node);
+        const found = updaterParam(node, setters);
         if (found) updaters.push(found);
         if (
           node.callee.type === "MemberExpression" &&

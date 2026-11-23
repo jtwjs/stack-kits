@@ -66,4 +66,33 @@ describe("eslint.config.js", () => {
       ),
     ).toContain("no-restricted-syntax");
   });
+
+  it("on* 맨 뒤 규칙은 컴포넌트 · 훅 파라미터에서만 본다", async () => {
+    expect(
+      await errorsOf(
+        "export const pick = (m: { onSuccess: () => void; data: number }) => { const { onSuccess, data } = m; return [onSuccess, data]; };\nexport interface Item { onSale: boolean; price: number; }\n",
+        "src/shared/lib/pick.ts",
+      ),
+    ).toEqual([]);
+  });
+
+  it("컴포넌트 파라미터 · Props interface 에서 on* 이 중간이면 막는다", async () => {
+    expect(
+      await errorsOf(
+        "export interface RowProps { onClick: () => void; label: string; }\nexport const Row = ({ onClick, label }: RowProps) => <button onClick={onClick}>{label}</button>;\n",
+        "src/shared/ui/row.tsx",
+      ),
+    ).toEqual(["no-restricted-syntax", "no-restricted-syntax"]);
+  });
+
+  it("useX 훅 · memo 컴포넌트 파라미터도 본다", async () => {
+    expect(
+      (
+        await errorsOf(
+          'import { memo } from "react";\nexport const useRow = ({ onLoad, id }: { onLoad: () => void; id: string }) => [onLoad, id];\nexport const Cell = memo(({ onClick, label }: { onClick: () => void; label: string }) => <i onClick={onClick}>{label}</i>);\n',
+          "src/shared/ui/cell.tsx",
+        )
+      ).filter((rule) => rule === "no-restricted-syntax"),
+    ).toHaveLength(2);
+  });
 });

@@ -99,15 +99,15 @@ const syntax = {
   },
   callbackLastInProps: {
     selector:
-      "ObjectPattern > Property[key.name=/^on[A-Z]/] ~ Property[key.name!=/^on[A-Z]/]",
+      ":matches(VariableDeclarator[id.name=/^([A-Z]|use[A-Z])/] > ArrowFunctionExpression, VariableDeclarator[id.name=/^[A-Z]/] > CallExpression > ArrowFunctionExpression) > ObjectPattern > Property[key.name=/^on[A-Z]/] ~ Property[key.name!=/^on[A-Z]/]",
     message:
-      "on* 콜백을 중간에 두지 말고 구조 분해 맨 뒤로 모은다 — 값과 이벤트가 섞이지 않아 props 를 한눈에 읽는다",
+      "컴포넌트 · 훅 파라미터에서 on* 콜백을 중간에 두지 말고 구조 분해 맨 뒤로 모은다 — 값과 이벤트가 섞이지 않아 props 를 한눈에 읽는다",
   },
   callbackLastInInterface: {
     selector:
-      "TSInterfaceBody > TSPropertySignature[key.name=/^on[A-Z]/] ~ TSPropertySignature[key.name!=/^on[A-Z]/]",
+      "TSInterfaceDeclaration[id.name=/(Props|Options)$/] > TSInterfaceBody > TSPropertySignature[key.name=/^on[A-Z]/] ~ TSPropertySignature[key.name!=/^on[A-Z]/]",
     message:
-      "on* 콜백 필드를 중간에 두지 말고 interface 맨 뒤로 모은다 — 값과 이벤트가 섞이지 않아 규격을 한눈에 읽는다",
+      "Props · Options interface 에서 on* 콜백 필드를 중간에 두지 말고 맨 뒤로 모은다 — 값과 이벤트가 섞이지 않아 규격을 한눈에 읽는다",
   },
   noFunctionDeclaration: {
     selector: "FunctionDeclaration",

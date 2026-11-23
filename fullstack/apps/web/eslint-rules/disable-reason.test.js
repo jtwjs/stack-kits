@@ -3,9 +3,9 @@ import path from "node:path";
 import tseslint from "typescript-eslint";
 import { describe, expect, it } from "vitest";
 
-import { DISABLE, hasReason, INLINE_CONFIG } from "./no-comments.js";
+import { DISABLE, hasReason, INLINE_CONFIG, namesRule } from "./no-comments.js";
 
-// 규칙 이름 없는 eslint-disable · 규칙 설정 주석(/* eslint local/no-comments: off */)은 local/no-comments 자신까지 꺼서
+// 규칙 이름 없는 eslint-disable(이유가 있어도) · 규칙 설정 주석(/* eslint local/no-comments: off */)은 local/no-comments 자신까지 꺼서
 // lint 로는 못 잡는다. 그래서 테스트가 src 를 직접 파싱해 주석 단위로 본다.
 const KIT_ROOT = path.join(import.meta.dirname, "..");
 
@@ -15,15 +15,17 @@ const forbiddenDirectives = (source, filePath = "fixture.ts") =>
     .ast.comments.map((comment) => comment.value.trim())
     .filter(
       (text) =>
-        (DISABLE.test(text) && !hasReason(text)) || INLINE_CONFIG.test(text),
+        (DISABLE.test(text) && (!namesRule(text) || !hasReason(text))) ||
+        INLINE_CONFIG.test(text),
     );
 
 describe("src 의 eslint 지시 주석", () => {
-  it("이유 없는 disable 과 규칙 설정 주석만 골라낸다", () => {
+  it("규칙 이름 · 이유 없는 disable 과 규칙 설정 주석만 골라낸다", () => {
     expect(
       forbiddenDirectives(
         [
           "/* eslint-disable */",
+          "/* eslint-disable -- 이유는 있지만 전부 끔 */",
           "// eslint-disable-line no-console",
           "// eslint-disable-next-line no-console -- CLI 출력",
           "/* eslint-disable no-console",
@@ -34,6 +36,7 @@ describe("src 의 eslint 지시 주석", () => {
       ),
     ).toEqual([
       "eslint-disable",
+      "eslint-disable -- 이유는 있지만 전부 끔",
       "eslint-disable-line no-console",
       "eslint local/no-comments: off",
     ]);
